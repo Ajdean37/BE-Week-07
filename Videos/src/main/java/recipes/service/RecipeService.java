@@ -1,6 +1,8 @@
 package recipes.service;
 
+import recipes.Recipes;
 import recipes.dao.RecipeDao;
+import recipes.entity.Recipe;
 import recipes.exception.DbException;
 
 import java.io.IOException;
@@ -13,9 +15,11 @@ import java.util.List;
 
 public class RecipeService {
  private static final String SCHEMA_FILE = "recipe_schema.sql";
+ private static final String DATA_FILE = "recipe_data.sql";
  private RecipeDao recipeDao = new RecipeDao();
  public void createAndPopulateTables() {
   loadFromFile(SCHEMA_FILE);
+  loadFromFile(DATA_FILE);
  }
  private void loadFromFile(String fileName) {
   String content = readFileContent(fileName);
@@ -45,13 +49,14 @@ public class RecipeService {
    }
    else {
     lines.add(content.substring(0, semicolon).trim());
-    content = content.substring(semicolon +1);
+    content = content.substring(semicolon + 1);
    }
   }
   return lines;
  }
 
  private String replaceWhiteSpaceSequencesWithSingleSpace(String content) {
+
   return content.replaceAll("\\s+", " ");
  }
 
@@ -79,5 +84,13 @@ public class RecipeService {
   } catch (Exception e) {
    throw new DbException(e);
   }
+ }
+
+ public static void main(String[] args) {
+  new RecipeService().createAndPopulateTables();
+ }
+
+ public Recipe addRecipe(Recipe recipe) {
+  return recipeDao.insertRecipe(recipe);
  }
 }
