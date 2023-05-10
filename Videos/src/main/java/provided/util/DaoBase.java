@@ -3,6 +3,8 @@
  */
 package provided.util;
 
+import recipes.entity.Recipe;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -16,6 +18,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -307,7 +310,7 @@ public abstract class DaoBase {
     return nameBuilder.toString();
   }
 
-  /**
+ /**
    * This class declares the exception throw by the {@link DaoBase} class. It is a thin wrapper for
    * {@link RuntimeException}.
    * 

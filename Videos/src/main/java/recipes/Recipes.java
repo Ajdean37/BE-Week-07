@@ -17,11 +17,14 @@ public class Recipes {
     private RecipeService recipeService = new RecipeService();
     private List<String> operations = List.of(
       "1) Create and populate all tables",
-      "2) Add a recipe"
+      "2) Add a recipe",
+      "3) List Recipes",
+      "4) Select a working recipe"
 
     );
+ private Recipe curRecipe;
 
-    public static void main(String[] args) {
+ public static void main(String[] args) {
      new Recipes().displayMenu();
     }
     private void displayMenu() {
@@ -40,6 +43,14 @@ public class Recipes {
                         break;
                     case 2:
                         addRecipe();
+                        break;
+                    case 3:
+                        listRecipes();
+                        break;
+                    case 4:
+                        setCurrentRecipe();
+                        break;
+
                     default:
                         System.out.println("\n" + operation + " is not valid. try again.");
                         break;
@@ -49,6 +60,33 @@ public class Recipes {
             }
         }
     }
+
+ private void setCurrentRecipe() {
+  List<Recipe> recipes = listRecipes();
+
+  Integer recipeId = getIntInput("Select a recipe ID");
+
+  curRecipe = null;
+
+  for (Recipe recipe : recipes) {
+   if(recipe.getRecipeId().equals(recipeId)) {
+    curRecipe = recipeService.fetchRecipeById(recipeId);
+    break;
+   }
+  }
+  if (Objects.isNull(curRecipe)) {
+   System.out.println("\nInvalid recipe selected.");
+  }
+ }
+
+ private List<Recipe> listRecipes() {
+     List<Recipe> recipes = recipeService.fetchRecipes();
+  System.out.println("\nRecipes:");
+
+  recipes.forEach(recipe -> System.out.println(" " + recipe.getRecipeId() + ": " + recipe.getRecipeName()));
+
+  return recipes;
+ }
 
  private void addRecipe() {
      String name = getStringInput("Enter the recipe name");
@@ -69,7 +107,9 @@ public class Recipes {
      recipe.setCookTime(cookTime);
 
      Recipe dbRecipe = recipeService.addRecipe(recipe);
-  System.out.println("You added this recipe " + dbRecipe);
+     System.out.println("You added this recipe " + dbRecipe);
+
+     curRecipe = recipeService.fetchRecipeById(dbRecipe.getRecipeId());
  }
 
  private LocalTime minutesToLocalTime(Integer numMinutes) {

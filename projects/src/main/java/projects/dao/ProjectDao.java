@@ -21,7 +21,7 @@ public class ProjectDao extends DaoBase {
     + "INSERT INTO " + PROJECT_TABLE + " "
     + "(project_name, estimated_hours, actual_hours, difficulty, notes) "
     + "VALUES "
-    + ")?, ?, ?, ?, ?)";
+    + "(?, ?, ?, ?, ?)";
 
   try(Connection conn = DbConnection.getConnection()) {
    startTransaction(conn);

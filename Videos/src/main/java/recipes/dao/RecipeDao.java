@@ -1,16 +1,14 @@
 package recipes.dao;
 
 import provided.util.DaoBase;
-import recipes.entity.Recipe;
+import recipes.Recipes;
+import recipes.entity.*;
 import recipes.exception.DbException;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.net.http.HttpResponse;
+import java.sql.*;
 import java.time.LocalTime;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 public class RecipeDao extends DaoBase {
 
@@ -19,11 +17,130 @@ public class RecipeDao extends DaoBase {
  private static final String UNIT_TABLE = "unit";
  private static final String STEP_TABLE = "step";
  private static final String CATEGORY_TABLE = "category";
- private static final String RECIPE_CATEGORY = "recipe_category";
+ private static final String RECIPE_CATEGORY_TABLE = "recipe_category";
+
+ public Optional<Recipe> fetchRecipeById( Integer recipeId) {
+  String sql = "SELECT * FROM " + RECIPE_TABLE + " WHERE recipe_id = ?";
+
+  try(Connection conn = DbConnection.getConnection()) {
+   startTransaction(conn);
+   try {
+    Recipe recipe = null;
+
+    try(PreparedStatement stmt = conn.prepareStatement(sql)) {
+     setParameter(stmt, 1, recipeId, Integer.class);
+
+     try(ResultSet rs = stmt.executeQuery()) {
+      if (rs.next()) {
+       recipe = extract(rs, Recipe.class);
+      }
+     }
+    }
+    if (Objects.nonNull(recipe)) {
+     recipe.getIngredients().addAll(fetchRecipeIngredients(conn, recipeId));
+     recipe.getSteps().addAll(fetchRecipeSteps(conn,recipeId));
+     recipe.getCategories().addAll(fetchRecipeCategories(conn,recipeId));
+
+    }
+    return Optional.ofNullable(recipe);
+   } catch(Exception e) {
+    throw new DbException(e);
+   }
+  } catch (SQLException e) {
+   throw new DbException(e);
+  }
+ }
+
+ private List<Category> fetchRecipeCategories(Connection conn, Integer recipeId) throws SQLException {
+  String sql = " "
+    + "SELECT c.*"
+    + "FROM" + RECIPE_CATEGORY_TABLE + "rc"
+    + "WHERE recipe_id = ?"
+    + "ORDER BY c.category_name";
+
+  try(PreparedStatement stmt = conn.prepareStatement(sql)) {
+   setParameter(stmt, 1, recipeId, Integer.class);
+
+   try(ResultSet rs = stmt.executeQuery()) {
+    List<Category> categories = new LinkedList<Category>();
+
+    while(rs.next()) {
+     categories.add(extract(rs, Category.class));
+    }
+    return categories;
+   }
+  }
+ }
+
+ private List<Step> fetchRecipeSteps(Connection conn, Integer recipeId) throws SQLException{
+  String sql = "SELECT *"
+    + "FROM " + STEP_TABLE
+    + "s WHERE s.recipe_id = ?";
+
+  try(PreparedStatement stmt = conn.prepareStatement(sql)) {
+   setParameter(stmt, 1, recipeId, Integer.class);
+
+   try(ResultSet rs = stmt.executeQuery()) {
+    List<Step> steps = new LinkedList<Step>();
+
+    while (rs.next()) {
+     steps.add(extract(rs,Step.class));
+    }
+    return steps;
+   }
+  }
+ }
+
+ private List<Ingredient> fetchRecipeIngredients(Connection conn, Integer recipeId) throws SQLException {
+  String sql = "SELECT i.*, u.unit_name_singular, u.unit_name_plural"
+    + "FROM " + INGREDIENT_TABLE + "i"
+    + "LEFT JOIN" + UNIT_TABLE + " u USING (unit_id)"
+    + "ORDER BY i.ingredient_order";
+
+  try(PreparedStatement stmt = conn.prepareStatement(sql)) {
+   setParameter(stmt, 1 ,recipeId, Integer.class);
+
+   try(ResultSet rs = stmt.executeQuery()) {
+    List<Ingredient> ingredients = new LinkedList<Ingredient>();
+
+    while (rs.next()) {
+     Ingredient ingredient = extract(rs, Ingredient.class);
+     Unit unit = extract(rs, Unit.class);
+
+     ingredient.setUnit(unit);
+     ingredients.add(ingredient);
+    }
+
+    return ingredients;
+   }
+  }
+ }
+
+ public List<Recipe> fetchAllRecipes() {
+  String sql = "SELECT * FROM " + RECIPE_TABLE + " ORDER BY recipe_name";
+  try(Connection conn = DbConnection.getConnection()) {
+    startTransaction(conn);
+    try(PreparedStatement stmt = conn.prepareStatement(sql)) {
+     try(ResultSet rs = stmt.executeQuery()) {
+      List<Recipe> recipes = new LinkedList<>();
+
+      while(rs.next()) {
+       recipes.add(extract(rs, Recipe.class));
+      }
+      return recipes;
+     }
+    }catch(Exception e) {
+     rollbackTransaction(conn);
+     throw new DbException();
+    }
+  } catch (SQLException e) {
+   throw new DbException(e);
+  }
+ }
 
  public Recipe insertRecipe(Recipe recipe) {
 
-  String sql = ""
+  String sql = " "
     + "INSERT INTO " + RECIPE_TABLE + " "
     + "(recipe_name, notes, num_servings, prep_time, cook_time) "
     + "VALUES "
@@ -74,6 +191,7 @@ public class RecipeDao extends DaoBase {
    throw new DbException(e);
   }
  }
+
 
 
 }
