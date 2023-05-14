@@ -5,6 +5,7 @@ import projects.exception.DbException;
 import projects.service.ProjectService;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
@@ -13,30 +14,41 @@ public class ProjectsApp {
 
  // @formatter:off
 private List<String> operations = List.of(
-  "1) Add a project"
+   "1) Add a project",
+   "2) List Project",
+   "3) Select a project"
+
 );
 // @formatter:on
 private Scanner scanner = new Scanner(System.in);
-private ProjectService projectService = new ProjectService();
+ private ProjectService projectService = new ProjectService();
+ private Project curProject = new Project();
+
  public static void main(String[] args) {
 
-  new ProjectsApp().processUserSelections();
+  new ProjectsApp().processUserSelection();
 
  }
 
- private void processUserSelections() {
+ private void processUserSelection() {
   boolean done = false;
 
-  while(!done) {
+  while (!done) {
    try {
     int selection = getUserSelection();
 
-    switch(selection) {
+    switch (selection) {
      case -1:
       done = exitMenu();
       break;
      case 1:
       createProject();
+      break;
+     case 2:
+      listProjects();
+      break;
+     case 3:
+      selectProject();
       break;
      default:
       System.out.println("\n" + selection + " is not a valid selection. Try again.");
@@ -44,8 +56,25 @@ private ProjectService projectService = new ProjectService();
     }
    } catch (Exception e) {
     System.out.println("\nError: " + e + " Try again.");
+    e.printStackTrace();
    }
   }
+ }
+
+ private void selectProject() {
+  listProjects();
+  Integer projectId = getIntInput("Enter a project ID to select a project");
+
+  curProject = null;
+
+  curProject = projectService.fetchProjectById(projectId);
+ }
+
+ private void listProjects() {
+  List<Project> projects = projectService.fetchAllProjects();
+  System.out.println("\nProjects:");
+
+  projects.forEach(project -> System.out.println(" " + project.getProjectId() + ": " + project.getProjectName()));
  }
 
  private void createProject() {
@@ -64,19 +93,18 @@ private ProjectService projectService = new ProjectService();
   project.setNotes(notes);
 
   Project dbProject = projectService.addProject(project);
-  System.out.println("You have successfully created project " +dbProject);
+  System.out.println("You have successfully created project " + dbProject);
  }
 
  private BigDecimal getBigDecimal(String prompt) {
   String input = getStringInput(prompt);
 
-  if(Objects.isNull(input)) {
+  if (Objects.isNull(input)) {
    return null;
   }
   try {
    return new BigDecimal(input).setScale(2);
-  }
-  catch (NumberFormatException e) {
+  } catch (NumberFormatException e) {
    throw new DbException(input + " is not a valid decimal number.");
   }
  }
@@ -90,9 +118,7 @@ private ProjectService projectService = new ProjectService();
  //gets users selection and converts to integer
  private int getUserSelection() {
   printOperations();
-
   Integer input = getIntInput("Enter a menu selection");
-
   return Objects.isNull(input) ? -1 : input;
  }
 
@@ -100,17 +126,15 @@ private ProjectService projectService = new ProjectService();
  private Integer getIntInput(String prompt) {
   String input = getStringInput(prompt);
 
-  if(Objects.isNull(input)) {
+  if (Objects.isNull(input)) {
    return null;
   }
   try {
    return Integer.valueOf(input);
-  }
-  catch (NumberFormatException e) {
+  } catch (NumberFormatException e) {
    throw new DbException(input + " is not a valid number.");
   }
  }
-
  //prints prompt and gets users input
  private String getStringInput(String prompt) {
   System.out.print(prompt + ": ");
@@ -118,11 +142,17 @@ private ProjectService projectService = new ProjectService();
 
   return input.isBlank() ? null : input.trim();
  }
-
- // Print menu selections
+ //Print menu selections
  private void printOperations() {
   System.out.println("\nThese are the available selections. Press the Enter key to quit:");
 
-  operations.forEach(line -> System.out.println(" " + line));
+  operations.forEach(line -> System.out.println("  " + line));
+
+  if (Objects.isNull(curProject)) {
+   System.out.println("\nYou are not working with a project");
+  } else {
+   System.out.println("\nYou are working with project: " + curProject);
+  }
  }
 }
+
