@@ -13,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.sql.DriverManager;
 
 public class ProjectDao extends DaoBase {
  private static final String CATEGORY_TABLE = "category";
@@ -23,12 +24,13 @@ public class ProjectDao extends DaoBase {
 
  public Project insertProject(Project project) {
 
-  String sql = ""
-    + "INSERT INTO" + PROJECT_TABLE + ""
-    + "(project_name, estimated_hours, actual_hours, difficulty, notes)"
-    + "VALUES"
-    + "(?, ?, ?, ?, ?)";
-
+  // @formatter:off
+  String sql = " "
+    + "INSERT INTO " + PROJECT_TABLE + " "
+    + " (project_name, estimated_hours, actual_hours, difficulty, notes) "
+    + " VALUES "
+    + " (?, ?, ?, ?, ?) ";
+  // @formatter:on
   try (Connection conn = DbConnection.getConnection()) {
    startTransaction(conn);
 
@@ -51,13 +53,13 @@ public class ProjectDao extends DaoBase {
     throw new DbException(e);
    }
   } catch (SQLException e) {
-   throw new DbException();
+   throw new DbException(e);
   }
  }
 
  public Optional<Project> fetchProjectById(Integer projectId) {
 
-  String sql = "SELECT * FROM" + PROJECT_TABLE + "WHERE project_id = ?";
+  String sql = "SELECT * FROM "  + PROJECT_TABLE + " WHERE project_id = ?";
 
   try (Connection conn = DbConnection.getConnection()) {
    startTransaction(conn);
@@ -93,10 +95,10 @@ public class ProjectDao extends DaoBase {
  }
 
  private List<Category> fetchCategoriesForProject(Connection conn, Integer projectId) throws SQLException {
-  String sql = ""
-    + "SELECT c.* FROM" + CATEGORY_TABLE + "c"
-    + "JOIN" + PROJECT_CATEGORY_TABLE + "pc USING (category_id)"
-    + "WHERE project_id = ?";
+  String sql = " "
+    + "SELECT c.* FROM " + CATEGORY_TABLE + " c "
+    + " JOIN " + PROJECT_CATEGORY_TABLE + " pc USING (category_id) "
+    + " WHERE project_id = ?";
 
   try(PreparedStatement stmt = conn.prepareStatement(sql)) {
    setParameter(stmt, 1, projectId, Integer.class);
@@ -113,7 +115,7 @@ public class ProjectDao extends DaoBase {
  }
 
  private List<Step> fetchStepsForProject(Connection conn, Integer projectId) throws SQLException {
-  String sql = "SELECT * FROM" + STEP_TABLE + "WHERE project_id = ?";
+  String sql = "SELECT * FROM " + STEP_TABLE + " WHERE project_id = ?";
 
   try (PreparedStatement stmt = conn.prepareStatement(sql)) {
    setParameter(stmt, 1, projectId, Integer.class);
@@ -130,7 +132,7 @@ public class ProjectDao extends DaoBase {
  }
 
  private List<Material> fetchMaterialForProject(Connection conn, Integer projectId) throws SQLException {
-  String sql = "SELECT * FROM" + MATERIAL_TABLE + "WHERE PROJECT_ID = ?";
+  String sql = "SELECT * FROM " + MATERIAL_TABLE + " WHERE project_id = ?";
 
   try(PreparedStatement stmt = conn.prepareStatement(sql)) {
    setParameter(stmt, 1, projectId, Integer.class);
@@ -147,7 +149,7 @@ public class ProjectDao extends DaoBase {
  }
 
  public List<Project> fetchAllProjects() {
-  String sql = "SELECT * FROM" + PROJECT_TABLE + "ORDER BY project_name";
+  String sql = "SELECT * FROM " + PROJECT_TABLE + " ORDER BY project_name";
 
   try (Connection conn = DbConnection.getConnection()) {
    startTransaction(conn);

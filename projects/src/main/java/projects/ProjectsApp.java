@@ -79,8 +79,8 @@ private Scanner scanner = new Scanner(System.in);
 
  private void createProject() {
   String projectName = getStringInput("Enter the project name");
-  BigDecimal estimatedHours = getBigDecimal("Enter the estimated hours");
-  BigDecimal actualHours = getBigDecimal("Enter the actual hours");
+  BigDecimal estimatedHours = getDecimalInput("Enter the estimated hours");
+  BigDecimal actualHours = getDecimalInput("Enter the actual hours");
   Integer difficulty = getIntInput("Enter the project difficulty");
   String notes = getStringInput("Enter the project notes");
 
@@ -96,7 +96,7 @@ private Scanner scanner = new Scanner(System.in);
   System.out.println("You have successfully created project " + dbProject);
  }
 
- private BigDecimal getBigDecimal(String prompt) {
+ private BigDecimal getDecimalInput(String prompt) {
   String input = getStringInput(prompt);
 
   if (Objects.isNull(input)) {
