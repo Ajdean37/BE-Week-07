@@ -208,7 +208,7 @@ public class ProjectDao extends DaoBase {
  }
 
  public boolean deleteProject(Integer projectId) {
-  String sql = "DELETE FROM " + PROJECT_TABLE + " WEHERE project_id = ?";
+  String sql = "DELETE FROM " + PROJECT_TABLE + " WHERE project_id = ?";
 
   try (Connection conn = DbConnection.getConnection()) {
    startTransaction(conn);
@@ -218,6 +218,7 @@ public class ProjectDao extends DaoBase {
     setParameter(stmt, 1, projectId, Integer.class);
 
     boolean deleted = stmt.executeUpdate() == 1;
+
 
     commitTransaction(conn);
 
